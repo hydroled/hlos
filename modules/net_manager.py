@@ -27,7 +27,7 @@ class NetworkManager(Service):
     def load_config(self):
         """Читает конфиг, а если его нет — создает правильный дефолтный файл"""
         try:
-            with open('wifi.json', 'r') as f:
+            with open('/wifi.json', 'r') as f:
                 config = json.loads(f.read())
                 if isinstance(config, dict):
                     return config
@@ -49,7 +49,7 @@ class NetworkManager(Service):
         }
 
         try:
-            with open('wifi.json', 'w') as f:
+            with open('/wifi.json', 'w') as f:
                 f.write(json.dumps(default_config))
         except Exception as e:
             print("[NET_MANAGER] Error saving default wifi.json:", e)

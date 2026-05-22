@@ -1,14 +1,4 @@
 {
-  "pins": [
-    [5, 1, "Помпа 1"],
-    [6, 1, "Помпа 2"],
-    [7, 1, "Помпа 3"],
-    [10, 1, "Помпа 4"]
-  ],
-  "cron_commands": [
-    {"id": 5, "target": "pumps.start", "name": "Полив 30 сек (Помпа 1)", "args": [5, 30]},
-    {"id": 6, "target": "pumps.start", "name": "Полив 30 сек (Помпа 2)", "args": [6, 30]},
-    {"id": 7, "target": "pumps.start", "name": "Полив 30 сек (Помпа 3)", "args": [7, 30]},
-    {"id": 10, "target": "pumps.start", "name": "Полив 30 сек (Помпа 4)", "args": [10, 30]}
-  ]
+  "pins": [],
+  "cron_commands": []
 }

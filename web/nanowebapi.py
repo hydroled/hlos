@@ -94,20 +94,31 @@ class Nanoweb:
             break
 
     async def handle(self, reader, writer):
+        # Получаем IP клиента
+        peer = writer.get_extra_info('peername')
+        client_ip = peer[0] if peer else "Unknown"
+
+        if cou_req[0] > 6:
+            print(f'err max-req: drop connection from {client_ip}')
+            await writer.aclose()
+            return
+
         cou_req[0] += 1
-        if cou_req[0] > 5: print('warn max-8-req: cou_req:', cou_req[0])
-
-        items = await reader.readline()
-        items = items.decode('ascii').split()
-        if len(items) != 3: return
-
-        request = Request()
-        request.read = reader.read
-        request.write = writer.awrite
-        request.close = writer.aclose
-        request.method, request.url, version = items
 
         try:
+            items = await reader.readline()
+            items = items.decode('ascii').split()
+            if len(items) != 3: return
+
+            request = Request()
+            request.read = reader.read
+            request.write = writer.awrite
+            request.close = writer.aclose
+            request.method, request.url, version = items
+
+            if cou_req[0] > 5:
+                print(f'warn max-req: cou_req={cou_req[0]}, IP={client_ip}, URL={request.url}')
+
             try:
                 if version not in ("HTTP/1.0", "HTTP/1.1"): raise HttpError(request, 505, "Version Not Supported")
                 while True:
@@ -141,7 +152,10 @@ class Nanoweb:
                 request, code, message = e.args
                 await self.callback_error(request, code, message)
         except OSError as e:
-            if e.args[0] != uerrno.ECONNRESET: raise
+            if e.args[0] != uerrno.ECONNRESET:
+                print(f"Nanoweb OSError: {e}")
+        except Exception as e:
+            print(f"Nanoweb Handle Error: {e}")
         finally:
             await writer.aclose()
             cou_req[0] -= 1

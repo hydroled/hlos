@@ -186,6 +186,7 @@ class WebServer(Service):
             return 'Not Found', 404
 
     async def api_send_response(self, request, methods="GET, POST, PUT, DELETE, OPTIONS", data=None):
+        gc.collect()
         await request.write(f"HTTP/1.1 200 OK\r\naccess-control-allow-origin: *\r\n")
         await request.write("Content-Type: application/json\r\n\r\n")
         if data:
@@ -194,7 +195,7 @@ class WebServer(Service):
             await request.write('{"status": true}')
 
     async def run(self):
-        await asyncio.sleep(2);
+        await asyncio.sleep(2)
         await self.app.run()
 
     def get_status(self):

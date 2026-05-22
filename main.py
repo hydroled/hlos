@@ -80,7 +80,7 @@ class init():
     cron = CronScheduler()
     os_kernel.add_task(cron)
 
-    hw_reset = HardResetButton(name="HW_Reset", pin_num=9)
+    hw_reset = HardResetButton(name="HW_Reset")
     os_kernel.add_task(hw_reset)
 
     web = WebServer(name=system_name, kernel=os_kernel)
