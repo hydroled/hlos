@@ -74,11 +74,25 @@
             .catch(e => console.error("Ошибка проверки безопасности", e));
         });
     </script>
+    
     <div class="dashboard-header">
         Панель управления
     </div>
 
     <div class="dashboard-grid">
+
+        <a href="/mixer" class="dash-card" style="border: 2px solid #28a745; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.15);">
+            <div class="dash-icon">🧪</div>
+            <div class="dash-title" style="color: #28a745;">NPK-Миксер</div>
+            <div class="dash-desc">Автоматическое дозирование и приготовление питательных растворов</div>
+        </a>
+
+        <a href="/scales" class="dash-card">
+            <div class="dash-icon">⚖️</div>
+            <div class="dash-title">Весы</div>
+            <div class="dash-desc">Калибровка геометрии и коррекция тензодатчика</div>
+        </a>       
+
         <a href="/standard" class="dash-card">
             <div class="dash-icon">🎛️</div>
             <div class="dash-title">Управление (Пины)</div>
@@ -109,5 +123,5 @@
             <div class="dash-desc">Информация о чипе, настройка времени и перезагрузка</div>
         </a>
 
-        </div>
+    </div>
 </div>

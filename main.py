@@ -2,12 +2,15 @@ import gc
 import machine as m
 from machine import reset, Pin
 import ujson as json
+import uasyncio as asyncio
 import webrepl
 
 from lib.kernel import os_kernel, Kernel, Service, load
 from modules.net_manager import NetworkManager
 from modules.GPIO_board import GPIO_board
 from modules.hldevs import PumpOnGPIO
+from modules.scale import AsyncHX711
+from modules.mixer import mixer
 from modules.cron import CronScheduler
 from modules.hw_reset import HardResetButton
 from modules.mqtt_client import SimpleMQTT
@@ -20,6 +23,8 @@ from web.standard import StandardApi
 from web.network import NetworkApi
 from web.cron import CronApi
 from web.system import SystemApi
+from web.scales_api import ScalesApi
+from web.mixer_api import MixerApi  # ДОБАВЛЕН API МИКСЕРА
 
 webrepl.start()
 
@@ -32,9 +37,8 @@ h = "reset(), net.sta.scan(), net.connect(lan,psw), net.status, ..."
 
 
 class init():
-    global net, sw, cron, pins
+    global net, sw, cron, pins, scale, mixer_svc
 
-    # 1. Загрузка имени системы
     try:
         with open('system.json', 'r') as f:
             system_config = json.load(f)
@@ -44,7 +48,6 @@ class init():
         system_name = 'MyDevice'
         tz_offset = 7
 
-    # 2. БЕЗОПАСНАЯ загрузка конфигурации железа
     try:
         with open('hardware.json', 'r') as f:
             hw_config = json.load(f)
@@ -52,19 +55,15 @@ class init():
         print("ВНИМАНИЕ: Ошибка чтения hardware.json! Загружен безопасный режим.")
         hw_config = {"pins": [], "cron_commands": []}
 
-    # Подготовка списка пинов (заменяем 1 на Pin.OUT)
     pins_list = []
     for p in hw_config.get('pins', []):
         mode = Pin.OUT if p[1] == 1 else Pin.IN
         pins_list.append((p[0], mode, p[2]))
 
-    # --- СИСТЕМНЫЕ СЛУЖБЫ ---
     net = NetworkManager(name='NET_MANAGER', timezone_offset=tz_offset)
     os_kernel.add_task(net)
 
-    # --- ЗАПУСК MQTT ---
     try:
-        # Пытаемся прочитать конфиг. Если файла нет или JSON кривой - вылетит исключение
         with open('mqtt.json', 'r') as f:
             json.load(f)
         mqtt = SimpleMQTT(name="MQTT_Client", net_manager=net)
@@ -73,7 +72,6 @@ class init():
     except (OSError, ValueError):
         print("ВНИМАНИЕ: mqtt.json не найден или поврежден. Служба MQTT отключена.")
 
-    # Инициализация GPIO из конфига
     pins = GPIO_board(pins_list, name="GPIO_board", group=2)
     os_kernel.add_task(pins)
 
@@ -88,34 +86,33 @@ class init():
 
     pumps = PumpOnGPIO()
 
+    # --- ИНИЦИАЛИЗАЦИЯ ВЕСОВ И МИКСЕРА ---
+    scale = AsyncHX711(dout_pin=32, pd_sck_pin=33)
+    
+    # ИСПРАВЛЕНО: Убран аргумент pumps, чтобы избежать сбоя
+    mixer_svc = mixer(name="Mixer", scale=scale)
+    os_kernel.add_task(mixer_svc)
+
     # --- РЕЕСТР ОБЪЕКТОВ ДЛЯ ПЛАНИРОВЩИКА ---
-    # Сюда добавляем все объекты, чьи функции можно вызывать из JSON
     cron_registry = {
         "pins": pins,
-        "pumps": pumps
+        "pumps": pumps,
+        "scale": scale,
+        "mixer": mixer_svc
     }
 
-    # --- ДИНАМИЧЕСКАЯ РЕГИСТРАЦИЯ КОМАНД КРОНА ---
     for cmd in hw_config.get('cron_commands', []):
-        target_str = cmd.get('target')  # например, "pins.set_value"
+        target_str = cmd.get('target') 
         if not target_str:
             continue
-
         try:
-            # Разбиваем "pins.set_value" на "pins" и "set_value"
             obj_name, method_name = target_str.split('.')
-
             if obj_name in cron_registry:
                 target_obj = cron_registry[obj_name]
-
-                # Магия Python: достаем реальную функцию по имени строки
                 target_func = getattr(target_obj, method_name)
-
-                # Регистрируем в планировщике
                 cron.append_command(cmd['id'], target_func, cmd['name'], cmd['args'])
             else:
                 print(f"ВНИМАНИЕ: Объект '{obj_name}' не найден в реестре Крона.")
-
         except Exception as e:
             print(f"ВНИМАНИЕ: Ошибка загрузки задачи Крона '{target_str}': {e}")
 
@@ -126,10 +123,12 @@ class init():
     _ = StandardApi(name="Web standard", web=web)
     _ = NetworkApi(name="Network API", web=web)
     _ = SystemApi(name="System API", web=web)
+    _ = ScalesApi(name="Web Scales", web=web, mixer_svc=mixer_svc)
+    
+    # ИСПРАВЛЕНО: Запуск API Миксера (обязательно для работы кнопок на фронтенде)
+    _ = MixerApi(name="Web Mixer", web=web, mixer_svc=mixer_svc)
 
-    # Запуск ядра
     os_kernel.start()
-
 
 if __name__ == "__main__":
     init()

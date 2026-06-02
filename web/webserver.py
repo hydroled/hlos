@@ -15,15 +15,12 @@ content_type = {
     'stream': 'application/octet-stream', 'html': 'text/html; charset=utf-8', 'css': 'text/css'
 }
 
-
 def authenticate(credentials_ref):
     async def fail(request):
-        # Очищаем буфер, если там что-то было
         await request.write("HTTP/1.1 401 Unauthorized\r\n")
-        # Важно: без пробела после 'Basic', и четко указанный realm
         await request.write('WWW-Authenticate: Basic realm="HLOS"\r\n')
         await request.write("Content-Type: text/html; charset=utf-8\r\n")
-        await request.write("Content-Length: 42\r\n")  # Явно задаем длину
+        await request.write("Content-Length: 42\r\n") 
         await request.write("Connection: close\r\n")
         await request.write("\r\n")
         await request.write("<h1>401: Требуется авторизация</h1>")
@@ -40,17 +37,13 @@ def authenticate(credentials_ref):
             except Exception:
                 return await fail(request)
             return await func(self, request)
-
         return wrapper
-
     return decorator
-
 
 async def send_header_api(request, cnt_type='json'):
     await request.write("HTTP/1.1 200 OK\r\n")
     await request.write(f"Content-Type: {content_type[cnt_type]}\r\n")
     await request.write("access-control-allow-origin: *\r\n\r\n")
-
 
 async def read_json(request):
     cl = request.headers.get('content-length', request.headers.get('Content-Length', 0))
@@ -62,7 +55,6 @@ async def read_json(request):
         if not chunk: break
         body += chunk
     return json.loads(body)
-
 
 def get_custom_data(requested_data):
     data = {}
@@ -81,7 +73,6 @@ def get_custom_data(requested_data):
     data['cou_req'] = cou_req[0]
     data['default_pass'] = (CREDENTIALS[1] == '123456789')
     return data
-
 
 class WebServer(Service):
     web_services = []
@@ -103,6 +94,11 @@ class WebServer(Service):
         self.app.route('/cron')(self.cron_page)
         self.app.route('/standard')(self.standard_page)
         self.app.route('/editor*')(self.editor_page)
+        self.app.route('/scales')(self.scales_page)
+        
+        # Регистрируем оба варианта (без слеша и со слешем для калькулятора)
+        self.app.route('/mixer')(self.mixer_page)
+        self.app.route('/mixer/')(self.mixer_page)
 
     def load_settings(self):
         try:
@@ -132,32 +128,36 @@ class WebServer(Service):
         await self.render_template(request, ('_header.html', content_html, '_footer.html'))
 
     @authenticate(CREDENTIALS)
-    async def index_page(self, request):
-        await self.render_page(request, 'index.html')
+    async def index_page(self, request): await self.render_page(request, 'index.html')
+    @authenticate(CREDENTIALS)
+    async def files_page(self, request): await self.render_page(request, 'files.html')
+    @authenticate(CREDENTIALS)
+    async def network_page(self, request): await self.render_page(request, 'network.html')
+    @authenticate(CREDENTIALS)
+    async def system_page(self, request): await self.render_page(request, 'system.html')
+    @authenticate(CREDENTIALS)
+    async def cron_page(self, request): await self.render_page(request, 'cron.html')
+    @authenticate(CREDENTIALS)
+    async def standard_page(self, request): await self.render_page(request, 'standard.html')
+    @authenticate(CREDENTIALS)
+    async def editor_page(self, request): await self.render_page(request, 'editor.html')
+    @authenticate(CREDENTIALS)
+    async def scales_page(self, request): await self.render_page(request, 'scales.html')
 
     @authenticate(CREDENTIALS)
-    async def files_page(self, request):
-        await self.render_page(request, 'files.html')
+    async def mixer_page(self, request):
+        url_str = request.url.decode('utf-8') if isinstance(request.url, bytes) else request.url
+        
+        # ДЕЛЕГИРОВАНИЕ ПРИКЛАДНОМУ ОБЪЕКТУ:
+        if '?' in url_str:
+            app_obj = getattr(self, 'mixer_svc', None)
+            if app_obj and hasattr(app_obj, 'process_request'):
+                if app_obj.process_request(url_str):
+                    # Если объект принял параметры, редиректим на чистый адрес
+                    await request.write(b"HTTP/1.1 302 Found\r\nLocation: /mixer\r\n\r\n")
+                    return
 
-    @authenticate(CREDENTIALS)
-    async def network_page(self, request):
-        await self.render_page(request, 'network.html')
-
-    @authenticate(CREDENTIALS)
-    async def system_page(self, request):
-        await self.render_page(request, 'system.html')
-
-    @authenticate(CREDENTIALS)
-    async def cron_page(self, request):
-        await self.render_page(request, 'cron.html')
-
-    @authenticate(CREDENTIALS)
-    async def standard_page(self, request):
-        await self.render_page(request, 'standard.html')
-
-    @authenticate(CREDENTIALS)
-    async def editor_page(self, request):
-        await self.render_page(request, 'editor.html')
+        await self.render_page(request, 'mixer.html')
 
     async def api_data(self, request):
         if request.method == "OPTIONS": return await self.api_send_response(request)
@@ -169,17 +169,24 @@ class WebServer(Service):
 
     @authenticate(CREDENTIALS)
     async def ui(self, request):
-        url = request.url.split('?', 1)[0]
+        url_str = request.url.decode('utf-8') if isinstance(request.url, bytes) else request.url
+        url = url_str.split('?', 1)[0]
+
+        # --- УНИВЕРСАЛЬНЫЙ РОУТИНГ С ПАРАМЕТРАМИ ---
+        # Если в адресе есть `?`, находим, какому приложению принадлежит базовый путь
+        if '?' in url_str:
+            for route_path, handler in self.app.routes:
+                if route_path == url:
+                    return await handler(request)
+        # -------------------------------------------
+
         if url.endswith('/'): url += 'index.html'
         if '.' not in url: url += '.html'
 
-        # 1. Вычисляем расширение файла (js, css, html)
         ext = url.split('.')[-1]
-        # 2. Берем правильный MIME-тип из вашего словаря в начале файла
         ct = content_type.get(ext, 'text/plain')
 
         try:
-            # 3. ВОТ ОНО! Отправляем правильные заголовки ДО того, как отправить сам файл
             await request.write(f"HTTP/1.1 200 OK\r\nContent-Type: {ct}\r\nConnection: close\r\n\r\n")
             await send_file(request, self.app.STATIC_DIR + url, binary=True)
         except:
