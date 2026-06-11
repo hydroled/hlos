@@ -96,9 +96,7 @@ class WebServer(Service):
         self.app.route('/editor*')(self.editor_page)
         self.app.route('/scales')(self.scales_page)
         
-        # Регистрируем оба варианта (без слеша и со слешем для калькулятора)
-        self.app.route('/mixer')(self.mixer_page)
-        self.app.route('/mixer/')(self.mixer_page)
+        # Роуты /mixer отсюда удалены. Их теперь регистрирует сам MixerApi!
 
     def load_settings(self):
         try:
@@ -144,21 +142,6 @@ class WebServer(Service):
     @authenticate(CREDENTIALS)
     async def scales_page(self, request): await self.render_page(request, 'scales.html')
 
-    @authenticate(CREDENTIALS)
-    async def mixer_page(self, request):
-        url_str = request.url.decode('utf-8') if isinstance(request.url, bytes) else request.url
-        
-        # ДЕЛЕГИРОВАНИЕ ПРИКЛАДНОМУ ОБЪЕКТУ:
-        if '?' in url_str:
-            app_obj = getattr(self, 'mixer_svc', None)
-            if app_obj and hasattr(app_obj, 'process_request'):
-                if app_obj.process_request(url_str):
-                    # Если объект принял параметры, редиректим на чистый адрес
-                    await request.write(b"HTTP/1.1 302 Found\r\nLocation: /mixer\r\n\r\n")
-                    return
-
-        await self.render_page(request, 'mixer.html')
-
     async def api_data(self, request):
         if request.method == "OPTIONS": return await self.api_send_response(request)
         data = await read_json(request)
@@ -172,13 +155,10 @@ class WebServer(Service):
         url_str = request.url.decode('utf-8') if isinstance(request.url, bytes) else request.url
         url = url_str.split('?', 1)[0]
 
-        # --- УНИВЕРСАЛЬНЫЙ РОУТИНГ С ПАРАМЕТРАМИ ---
-        # Если в адресе есть `?`, находим, какому приложению принадлежит базовый путь
         if '?' in url_str:
             for route_path, handler in self.app.routes:
                 if route_path == url:
                     return await handler(request)
-        # -------------------------------------------
 
         if url.endswith('/'): url += 'index.html'
         if '.' not in url: url += '.html'

@@ -1,0 +1,70 @@
+<style>
+    .dash-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .weight-display { font-size: 4rem; font-family: monospace; font-weight: bold; text-align: center; color: #1a202c; line-height: 1.2; }
+    .sensor-stats { text-align: center; color: #718096; font-size: 0.85rem; background: #edf2f7; padding: 5px 15px; border-radius: 15px; display: inline-block; margin-top: 10px; }
+    .section-title { font-size: 1.1rem; font-weight: bold; color: #2b6cb0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 15px; margin-top: 15px; }
+    
+    /* Стили защитной блокировки */
+    #mixer-lock-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+</style>
+
+<div id="mixer-lock-overlay">
+    <div style="font-size: 5rem; line-height: 1;">🛑</div>
+    <h1 style="color: #e53e3e; font-weight: bold; margin-top: 20px;">ДОСТУП ЗАКРЫТ</h1>
+    <h3 style="color: #2d3748;">NPK-Миксер выполняет налив!</h3>
+    <p style="color: #718096; font-size: 1.1rem; max-width: 500px; text-align: center; margin-top: 15px;">
+        Обращение к аппаратному модулю весов заблокировано. Одновременная калибровка во время дозирования может привести к нарушению пропорций раствора и аварии.
+    </p>
+    <a href="/mixer" class="btn btn-primary btn-lg" style="margin-top: 20px;">Перейти к монитору Миксера</a>
+</div>
+
+<div class="container">
+    <div class="dash-box">
+        <h5 style="color: #4a5568;"><span style="font-size: 1.2rem;">⚖️</span> Весовой измерительный узел</h5>
+        <div style="text-align: center; padding: 30px 0;">
+            <div style="color: #718096; font-weight: bold; font-size: 0.9rem; margin-bottom: 10px;">ТЕКУЩИЙ ВЕС (ЦЕНТР)</div>
+            <div class="weight-display"><span id="live-weight">0.00</span> <span style="font-size: 3rem;">Г</span></div>
+            <div class="sensor-stats">АЦП: <span id="live-raw">0</span> | Калман: <span id="live-kalman">0</span></div>
+        </div>
+        <button id="btn-tare" class="btn btn-danger btn-lg" style="width: 100%; font-weight: bold;">Установить НОЛЬ (Тара)</button>
+    </div>
+
+    <div class="dash-box">
+        <h5 style="color: #2b6cb0; cursor: pointer;" onclick="document.getElementById('calib-body').style.display = document.getElementById('calib-body').style.display === 'none' ? 'block' : 'none'">
+            ▼ 🛠️ Калибровка геометрии и коэффициентов (Развернуть)
+        </h5>
+        
+        <div id="calib-body" style="display: none; margin-top: 20px;">
+            <div class="section-title">🤖 Полуавтоматическая калибровка по эталону</div>
+            <p style="font-size: 0.9rem; color: #4a5568;">
+                1. Сбросьте пустые весы кнопкой "Тара".<br>
+                2. Установите точный калибровочный груз на нужную позицию.<br>
+                3. Введите точный вес груза ниже и нажмите кнопку соответствующей зоны.
+            </p>
+            <label style="font-weight: bold; color: #4a5568;">Масса эталона (граммы):</label>
+            <input type="number" id="std-weight" class="form-control" value="100" style="margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 30px;">
+                <button id="btn-cal-a" class="btn btn-secondary" style="flex: 1;">Калибровать А (Лево)</button>
+                <button id="btn-cal-c" class="btn btn-primary" style="flex: 1;">Калибровать Центр</button>
+                <button id="btn-cal-b" class="btn btn-secondary" style="flex: 1;">Калибровать Б (Право)</button>
+            </div>
+
+            <div class="section-title">🥤 Вес пустой тары (контроль наличия чашек)</div>
+            <p style="font-size: 0.9rem; color: #4a5568;">Поставьте пустые чашки на платформу. Нажмите синюю кнопку для автоматического замера их веса.</p>
+            <label style="font-weight: bold; color: #4a5568;">Масса пустой тары (г):</label>
+            <input type="number" step="0.01" id="in-cups" class="form-control" style="margin-bottom: 15px;">
+            <button id="btn-fix-cups" class="btn btn-primary" style="width: 100%; margin-bottom: 30px;">Зафиксировать текущий вес как вес чашек</button>
+
+            <div class="section-title">⚙️ Таблица прямых коэффициентов пересчета</div>
+            <label>Коэффициент А (Лево):</label>
+            <input type="number" step="0.01" id="in-ca" class="form-control" style="margin-bottom: 10px;">
+            <label>Коэффициент Центр:</label>
+            <input type="number" step="0.01" id="in-cc" class="form-control" style="margin-bottom: 10px;">
+            <label>Коэффициент Б (Право):</label>
+            <input type="number" step="0.01" id="in-cb" class="form-control" style="margin-bottom: 25px;">
+
+            <button id="btn-save" class="btn btn-success btn-lg" style="width: 100%; font-weight: bold;">💾 Сохранить настройки в память ESP32</button>
+        </div>
+    </div>
+</div>
+<script src="/scales.js" defer></script>

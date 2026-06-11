@@ -1,0 +1,436 @@
+<style>
+    /* --- МИКРО-CSS для миксера --- */
+    .mixer-container { max-width: 800px; margin: 0 auto; padding: 10px; font-family: system-ui, -apple-system, sans-serif; color: #333; box-sizing: border-box; }
+    .mixer-container * { box-sizing: border-box; }
+    .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 1rem; border: none; }
+    .card-body { padding: 15px; }
+    
+    /* Сетка */
+    .row { display: flex; flex-wrap: wrap; margin-left: -5px; margin-right: -5px; }
+    .col-4 { width: 33.333%; padding: 0 5px; }
+    .col-6 { width: 50%; padding: 0 5px; }
+    .d-flex { display: flex; }
+    .justify-content-between { justify-content: space-between; }
+    .justify-content-end { justify-content: flex-end; }
+    .align-items-center { align-items: center; }
+    .align-items-end { align-items: flex-end; }
+    
+    /* Текст и цвета */
+    .text-center { text-align: center; }
+    .text-end { text-align: right; }
+    .text-muted { color: #6c757d; }
+    .text-primary { color: #0d6efd; }
+    .text-secondary { color: #6c757d; }
+    .text-success { color: #198754; }
+    .fw-bold { font-weight: bold; }
+    .small { font-size: 0.8rem; }
+    
+    /* Отступы и границы */
+    .mb-0 { margin-bottom: 0; } .mb-2 { margin-bottom: 0.5rem; } .mb-3 { margin-bottom: 1rem; } .mb-4 { margin-bottom: 1.5rem; }
+    .mt-3 { margin-top: 1rem; } .mt-4 { margin-top: 1.5rem; }
+    .pb-2 { padding-bottom: 0.5rem; } .py-1 { padding: 0.25rem 0; } .p-4 { padding: 1rem; }
+    .border-bottom { border-bottom: 1px solid #dee2e6; }
+    .border-top { border-top: 1px solid #dee2e6; }
+    .border-end { border-right: 1px solid #dee2e6; }
+    
+    h4, h5, h6 { margin: 0 0 0.5rem 0; }
+    
+    /* Элементы интерфейса */
+    .badge { padding: 5px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; color: #fff; background-color: #6c757d; }
+    .bg-success { background-color: #198754 !important; }
+    .bg-light { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; }
+    
+    .form-control { width: 100%; padding: 6px; border: 1px solid #ced4da; border-radius: 5px; font-family: monospace; font-size: 0.9rem; text-align: right; }
+    .form-control-sm { padding: 4px; font-size: 0.8rem; }
+    
+    /* Кнопки - 100% высота и центрирование */
+    .btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 6px 2px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; text-align: center; font-size: 0.65rem; white-space: normal; word-wrap: break-word; line-height: 1.2; text-decoration: none; }
+    
+    .btn-primary { background-color: #0d6efd; color: #fff; }
+    .btn-danger { background-color: #dc3545; color: #fff; }
+    .btn-warning { background-color: #ffc107; color: #000; }
+    .btn-outline-primary { background-color: transparent; border: 2px solid #0d6efd; color: #0d6efd; }
+    .btn-outline-success { background-color: transparent; border: 2px solid #198754; color: #198754; }
+    .btn-sm { padding: 6px; font-size: 0.7rem; }
+    .w-100 { width: 100%; }
+    
+    /* Специфичные стили миксера */
+    .weight-display { font-size: 2.5rem; font-weight: bold; color: #0d6efd; margin: 10px 0; }
+    .sub-weight { font-size: 1.5rem; font-weight: bold; color: #198754; }
+    .sub-weight.cup-b { color: #d97706; }
+    .table-header { font-size: 0.7rem; text-transform: uppercase; color: #6c757d; }
+    .pump-active { background-color: #e8f4fd; border-radius: 5px; }
+    .alert { padding: 1rem; border-radius: 5px; margin-top: 1rem; display: none; font-weight: bold; }
+    .alert-danger { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+</style>
+
+<div class="mixer-container">
+
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center py-1">
+            <h4 class="mb-0 fw-bold text-secondary">🧪 NPK Mixer</h4>
+            <span class="badge bg-success" id="mixer-status-badge">ГОТОВ</span>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body p-4">
+            
+            <div class="row mb-3 align-items-end border-bottom pb-2">
+                <div class="col-4">
+                    <select class="form-control form-control-sm fw-bold text-secondary" style="font-size: 0.65rem; padding: 4px 2px; text-align: left;">
+                        <option value="1">А и Б по 1л, весы 1</option>
+                        <option value="2">А и Б по 2л, весы 1</option>
+                        <option value="5">А и Б по 5л, весы 1</option>
+                    </select>
+                </div>
+                <div class="col-4 text-center">
+                    <a href="/profiles.html" class="btn btn-sm btn-outline-primary" style="padding: 4px 8px; width: auto; height: auto; display: inline-block;">📖 Рецепты</a>
+                </div>
+                <div class="col-4 d-flex justify-content-end align-items-center">
+                    <label class="text-muted small mb-0" style="margin-right: 4px; font-size: 0.7rem;">Точн:</label>
+                    <input type="number" id="in-precision" class="form-control form-control-sm text-end" style="width: 70px; padding: 4px;" value="0.10" step="0.01">
+                </div>
+            </div>
+
+            <div class="row mb-2 table-header fw-bold border-bottom pb-2">
+                <div class="col-4">Налить (г)</div>
+                <div class="col-4 text-center">Моносоль</div>
+                <div class="col-4 text-end">Остаток (г)</div>
+            </div>
+
+            <h6 class="text-primary fw-bold mt-3 mb-3">Чаша А (Нитраты)</h6>
+            
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p1">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p1" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">1:CaN</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p1" value="0.00" step="0.01"></div>
+            </div>
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p2">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p2" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">2:KN</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p2" value="0.00" step="0.01"></div>
+            </div>
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p3">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p3" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">3:NH4</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p3" value="0.00" step="0.01"></div>
+            </div>
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p4">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p4" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">4:MgN</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p4" value="0.00" step="0.01"></div>
+            </div>
+
+            <h6 class="fw-bold mt-4 mb-3" style="color: #d97706;">Чаша Б (Сульфаты)</h6>
+            
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p5">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p5" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">5:KS</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p5" value="0.00" step="0.01"></div>
+            </div>
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p6">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p6" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">6:KP</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p6" value="0.00" step="0.01"></div>
+            </div>
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p7">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p7" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">7:MgS</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p7" value="0.00" step="0.01"></div>
+            </div>
+            <div class="row mb-2 align-items-center pump-row py-1" id="row-p8">
+                <div class="col-4"><input type="number" class="form-control p-in text-end" id="in-p8" value="0.00" step="0.01" min="0"></div>
+                <div class="col-4 text-center text-secondary small fw-bold">8:MK</div>
+                <div class="col-4"><input type="number" class="form-control stock-in text-end" id="st-p8" value="0.00" step="0.01"></div>
+            </div>
+
+            <div class="row mt-4 border-top pt-4">
+                <div class="col-4">
+                    <button class="btn btn-primary w-100 shadow-sm" id="btn-start">▶ НАЛИТЬ</button>
+                    <button class="btn btn-danger w-100 shadow-sm" id="btn-stop" style="display: none;">⏹ СТОП</button>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-outline-success w-100" id="btn-save-profile">📝 В рецепты</button>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-outline-primary w-100" id="btn-save-stock" style="display: none;">💾 Сохранить</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card mb-4 bg-light">
+        <div class="card-body p-4 text-center">
+            
+            <p class="text-muted small table-header mb-1">Активный шаг</p>
+            <h5 class="fw-bold mb-3" id="active-task-name">Нет активных задач</h5>
+            <p class="text-muted small mb-4">Осталось шагов: <strong id="tasks-left">0</strong></p>
+
+            <div class="p-4 mb-4" style="background: #fff; border-radius: 8px; border: 1px solid #dee2e6;">
+                <p class="text-muted small table-header mb-0">Общий вес на платформе (г)</p>
+                <div class="weight-display" id="w-total">0.00</div>
+                <div id="cups-status" class="fw-bold small text-success">✅ Чашки на месте</div>
+                
+                <button class="btn btn-sm btn-warning mt-3" id="btn-flush" style="height: auto;">
+                    🔄 Сбросить память кружек
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-6 border-end">
+                    <p class="text-muted small table-header mb-0">Налито в А (г)</p>
+                    <div class="sub-weight" id="w-a">0.00</div>
+                </div>
+                <div class="col-6">
+                    <p class="text-muted small table-header mb-0">Налито в Б (г)</p>
+                    <div class="sub-weight cup-b" id="w-b">0.00</div>
+                </div>
+            </div>
+
+            <div id="error-alert" class="alert alert-danger" role="alert"></div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const btnStart = document.getElementById('btn-start');
+    const btnStop = document.getElementById('btn-stop');
+    const btnFlush = document.getElementById('btn-flush');
+    const btnSaveStock = document.getElementById('btn-save-stock');
+    const btnSaveProfile = document.getElementById('btn-save-profile');
+    const badge = document.getElementById('mixer-status-badge');
+    const errAlert = document.getElementById('error-alert');
+    
+    const taskName = document.getElementById('active-task-name');
+    const tasksLeft = document.getElementById('tasks-left');
+    const wTotal = document.getElementById('w-total');
+    const weightA = document.getElementById('w-a');
+    const weightB = document.getElementById('w-b');
+    const cupsStatus = document.getElementById('cups-status');
+
+    let isUserEditingStock = false;
+    let stockBlurTimeout;
+
+    // Плавное появление кнопки сохранения остатков
+    document.querySelectorAll('.stock-in').forEach(el => {
+        el.addEventListener('focus', () => {
+            clearTimeout(stockBlurTimeout);
+            isUserEditingStock = true;
+            btnSaveStock.style.display = 'flex'; 
+        });
+        el.addEventListener('blur', () => {
+            stockBlurTimeout = setTimeout(() => { 
+                isUserEditingStock = false; 
+            }, 400);
+        });
+    });
+
+    function toggleInputs(disabled) {
+        document.querySelectorAll('.p-in, .stock-in, #in-precision').forEach(el => el.disabled = disabled);
+    }
+
+    function highlightRow(pumpId) {
+        document.querySelectorAll('.pump-row').forEach(el => el.classList.remove('pump-active'));
+        if (pumpId) {
+            const row = document.getElementById(`row-${pumpId}`);
+            if (row) row.classList.add('pump-active');
+        }
+    }
+
+    btnSaveStock.addEventListener('click', async () => {
+        clearTimeout(stockBlurTimeout);
+        isUserEditingStock = true;
+        
+        const payload = {};
+        for (let i = 1; i <= 8; i++) {
+            payload[`p${i}`] = parseFloat(document.getElementById(`st-p${i}`).value) || 0;
+        }
+        
+        btnSaveStock.textContent = "...";
+        try {
+            await fetch('/api/mixer/update_stock', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(payload) 
+            });
+        } catch (e) { console.error(e); }
+        
+        setTimeout(() => { 
+            btnSaveStock.textContent = "💾 Сохранить"; 
+            isUserEditingStock = false; 
+            btnSaveStock.style.display = 'none'; 
+        }, 500);
+    });
+
+    // Логика сохранения профиля рецепта
+    btnSaveProfile.addEventListener('click', async () => {
+        let params = [];
+        for (let i = 1; i <= 8; i++) {
+            const val = parseFloat(document.getElementById(`in-p${i}`).value) || 0;
+            if (val > 0) params.push(`p${i}=${val}`);
+        }
+
+        if (params.length === 0) {
+            alert('Введите граммовки хотя бы для одной помпы!');
+            return;
+        }
+
+        // Генерируем дату и время
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ru-RU');
+        const timeStr = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+        const defaultName = `${dateStr} ${timeStr}`;
+
+        const name = prompt('Сохранение рецепта.\\nВы можете дописать название перед датой:', defaultName);
+        if (!name) return;
+        
+        const payload = { 
+            name: name, 
+            url: `?s=0&${params.join('&')}` 
+        };
+
+        try {
+            const res = await fetch('/api/mixer/save_profile', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(payload) 
+            });
+            if (res.ok) {
+                alert('✅ Рецепт успешно сохранен!');
+            } else {
+                alert('Ошибка сервера при сохранении.');
+            }
+        } catch (e) { alert('Ошибка сети при сохранении профиля.'); }
+    });
+
+    async function fetchStatus() {
+        try {
+            const res = await fetch('/api/mixer/status');
+            const data = await res.json();
+            
+            wTotal.textContent = data.weight_total.toFixed(2);
+            weightA.textContent = data.weight_a.toFixed(2);
+            weightB.textContent = data.weight_b.toFixed(2);
+            tasksLeft.textContent = data.tasks_left;
+
+            if (data.cups_present) cupsStatus.innerHTML = '<span style="color: #198754;">✅ Чашки на месте</span>';
+            else cupsStatus.innerHTML = '<span style="color: #dc3545;">⚠️ ВНИМАНИЕ: Нет чашек!</span>';
+
+            if (data.loaded_pumps && Object.keys(data.loaded_pumps).length > 0) {
+                for (let i = 1; i <= 8; i++) {
+                    const val = data.loaded_pumps[`p${i}`];
+                    const inputEl = document.getElementById(`in-p${i}`);
+                    if (inputEl) inputEl.value = val !== undefined ? val.toFixed(2) : "0.00";
+                }
+                fetch('/api/mixer/clear_loaded', { method: 'POST' }).catch(console.error);
+            }
+
+            if (data.stocks && !isUserEditingStock) {
+                for (let i = 1; i <= 8; i++) {
+                    const stockVal = data.stocks[`p${i}`];
+                    const inputEl = document.getElementById(`st-p${i}`);
+                    if (inputEl) inputEl.value = (stockVal !== undefined) ? stockVal.toFixed(2) : "0.00";
+                }
+            }
+
+            // Динамическая подмена НАЛИТЬ / СТОП
+            if (data.is_dosing || data.tasks_left > 0) {
+                btnStart.style.display = 'none';
+                btnStop.style.display = 'flex';
+                btnSaveProfile.disabled = true;
+                toggleInputs(true);
+            } else {
+                btnStart.style.display = 'flex';
+                btnStop.style.display = 'none';
+                btnSaveProfile.disabled = false;
+                toggleInputs(false);
+            }
+
+            if (!data.cups_present && !data.is_dosing) btnStart.disabled = true;
+            else if (!data.is_dosing && data.tasks_left === 0) btnStart.disabled = false;
+
+            if (data.error) {
+                errAlert.style.display = 'block';
+                errAlert.textContent = data.error;
+                badge.style.backgroundColor = '#dc3545';
+                badge.textContent = 'ОШИБКА';
+                btnStart.style.display = 'flex'; 
+                btnStop.style.display = 'none';
+                highlightRow(null);
+            } else if (data.is_dosing || data.tasks_left > 0) {
+                errAlert.style.display = 'none';
+                badge.style.backgroundColor = '#0d6efd';
+                badge.textContent = 'НАЛИВ';
+                if (data.current_task) {
+                    taskName.textContent = `${data.current_task.name} -> ${data.current_task.amount_g.toFixed(2)} г`;
+                    highlightRow(data.current_task.pump_id);
+                } else {
+                    taskName.textContent = "Смена шага...";
+                }
+            } else {
+                errAlert.style.display = 'none';
+                badge.style.backgroundColor = '#198754';
+                badge.textContent = 'ГОТОВ';
+                taskName.textContent = 'Нет активных задач';
+                highlightRow(null);
+            }
+        } catch (e) {
+            badge.style.backgroundColor = '#dc3545';
+            badge.textContent = 'НЕТ СВЯЗИ';
+        }
+    }
+
+    btnStart.addEventListener('click', async () => {
+        const payload = { precision: parseFloat(document.getElementById('in-precision').value) || 0.1 };
+        let hasValues = false;
+        let missingStockErrors = [];
+
+        for (let i = 1; i <= 8; i++) {
+            const val = parseFloat(document.getElementById(`in-p${i}`).value) || 0;
+            if (val > 0) {
+                const stockVal = parseFloat(document.getElementById(`st-p${i}`).value) || 0;
+                if (val > stockVal) {
+                    const pumpName = document.querySelector(`#row-p${i} .text-secondary`).innerText;
+                    missingStockErrors.push(`- ${pumpName} (Нужно: ${val.toFixed(2)}г, Остаток: ${stockVal.toFixed(2)}г)`);
+                }
+                payload[`p${i}`] = val;
+                hasValues = true;
+            }
+        }
+
+        if (!hasValues) {
+            alert('Введите вес хотя бы для одной помпы!');
+            return;
+        }
+
+        if (missingStockErrors.length > 0) {
+            alert('ОТМЕНА СТАРТА!\nНедостаточно раствора:\n\n' + missingStockErrors.join('\n') + '\n\nДолейте и сохраните остатки.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/mixer/start_manual', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            if (!res.ok) {
+                errAlert.style.display = 'block';
+                errAlert.textContent = await res.text();
+            }
+        } catch (e) { alert('Ошибка отправки'); }
+    });
+
+    btnFlush.addEventListener('click', async () => {
+        if (!confirm("Сбросить память налитого в кружки?")) return;
+        try { await fetch('/api/mixer/flush', { method: 'POST' }); } catch (e) {}
+    });
+
+    btnStop.addEventListener('click', async () => {
+        try { await fetch('/api/mixer/stop', { method: 'POST' }); } catch (e) {}
+    });
+
+    setInterval(fetchStatus, 400);
+});
+</script>
